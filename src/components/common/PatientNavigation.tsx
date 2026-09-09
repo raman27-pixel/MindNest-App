@@ -23,7 +23,7 @@ export const PatientNavigation: React.FC = () => {
     <>
       <nav 
         aria-label="Patient Main Navigation" 
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200 shadow-xl p-2 sm:p-3"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200 shadow-xl px-2 py-1"
       >
         <div className="max-w-xl mx-auto grid grid-cols-5 gap-2">
           {items.map((item) => {
@@ -33,7 +33,7 @@ export const PatientNavigation: React.FC = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) => `
-                  flex flex-col items-center justify-center p-2 rounded-[22px] transition-all duration-150 min-h-[60px]
+                  flex flex-col items-center justify-center py-1.5 px-1 rounded-[16px] transition-all duration-150 min-h-[46px]
                   ${isActive 
                     ? 'bg-[#0E8765] text-white shadow-clay-primary font-black scale-102' 
                     : 'bg-[#F4F7FB] text-slate-700 hover:bg-slate-100 font-bold border border-slate-200/60'}
@@ -41,8 +41,8 @@ export const PatientNavigation: React.FC = () => {
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`w-6 h-6 sm:w-7 sm:h-7 mb-0.5 ${isActive ? 'text-white' : 'text-slate-600'}`} />
-                    <span className="text-[11px] sm:text-xs tracking-wide font-heading truncate max-w-full">
+                    <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'text-white' : 'text-slate-600'}`} />
+                    <span className="text-[10px] tracking-wide font-heading truncate max-w-full">
                       {item.label}
                     </span>
                   </>
@@ -54,11 +54,11 @@ export const PatientNavigation: React.FC = () => {
           {/* Three-Dot Menu Button */}
           <button
             onClick={() => setIsMenuOpen(true)}
-            className="flex flex-col items-center justify-center p-2 rounded-[22px] bg-[#F4F7FB] text-slate-700 hover:bg-slate-100 font-bold border border-slate-200/60 min-h-[60px] transition-all"
+            className="flex flex-col items-center justify-center py-1 px-1 rounded-[12px] bg-[#F4F7FB] text-slate-700 hover:bg-slate-100 font-bold border border-slate-200/60 min-h-[40px] transition-all"
             aria-label="Open full menu"
           >
-            <MoreHorizontal className="w-6 h-6 sm:w-7 sm:h-7 mb-0.5 text-slate-600" />
-            <span className="text-[11px] sm:text-xs tracking-wide font-heading">
+            <MoreHorizontal className="w-5 h-5 mb-0.5 text-slate-600" />
+            <span className="text-[9px] tracking-wide font-heading">
               Menu
             </span>
           </button>

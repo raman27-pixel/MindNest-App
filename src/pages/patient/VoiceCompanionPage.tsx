@@ -22,6 +22,17 @@ const LANGUAGES = [
 
 const GREETING = 'Namaste Rita ji! Main aapki saheli hoon. Aap mujhse apne ghar, bachpan ya parivaar ke baare mein kuch bhi keh sakti hain.';
 
+// Auto-detect language from user input text
+const detectLanguage = (text: string): string => {
+  if (/[\u0900-\u097F]/.test(text)) return 'hi';        // Hindi / Devanagari
+  if (/[\u0980-\u09FF]/.test(text)) return 'bn';        // Bengali / Assamese
+  if (/[\u0B80-\u0BFF]/.test(text)) return 'ta';        // Tamil
+  if (/[\u0C00-\u0C7F]/.test(text)) return 'te';        // Telugu
+  if (/[\u0A80-\u0AFF]/.test(text)) return 'gu';        // Gujarati
+  if (/[\u0A00-\u0A7F]/.test(text)) return 'pa';        // Punjabi
+  return 'en';                                           // Default English
+};
+
 // Delay in ms before auto-sending after mic stops
 const AUTO_SEND_DELAY = 1500;
 
@@ -76,6 +87,9 @@ export const VoiceCompanionPage: React.FC = () => {
     addMessage('PATIENT', input);
     setIsThinking(true);
 
+    // Auto-detect language from what the user typed/spoke
+    const detectedLang = detectLanguage(input);
+
     try {
       const approvedMemories = db.getAiApprovedMemories();
       const patient = db.getPatientProfile();
@@ -86,7 +100,7 @@ export const VoiceCompanionPage: React.FC = () => {
         patient.preferredName || patient.name || 'Rita',
         history,
         approvedMemories,
-        selectedLang.code.split('-')[0]
+        detectedLang   // pass detected language so Gemini replies in same language
       );
 
       setIsThinking(false);
@@ -94,7 +108,9 @@ export const VoiceCompanionPage: React.FC = () => {
       speak(geminiReply.message);
     } catch {
       setIsThinking(false);
-      const fallback = `I hear you with all my heart. You are safe and surrounded by love. Tell me more.`;
+      const fallback = detectedLang === 'hi'
+        ? 'आप बिल्कुल सुरक्षित हैं। मैं आपके साथ हूँ। क्या आप अपने घर या परिवार के बारे में बात करना चाहेंगी?'
+        : 'I hear you with all my heart. You are safe and surrounded by love. Tell me more.';
       addMessage('COMPANION', fallback);
       speak(fallback);
     }
@@ -209,7 +225,7 @@ export const VoiceCompanionPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FB] flex flex-col max-w-lg mx-auto">
+    <div className="h-screen bg-[#F4F7FB] flex flex-col max-w-lg mx-auto overflow-hidden">
       {/* Top Bar */}
       <div className="flex items-center justify-between py-3 px-4 bg-[#F4F7FB] sticky top-0 z-10 border-b border-slate-100">
         <button
@@ -276,7 +292,7 @@ export const VoiceCompanionPage: React.FC = () => {
       </div>
 
       {/* Chat History */}
-      <div className="flex-1 overflow-y-auto px-4 flex flex-col gap-3 pb-2" style={{ maxHeight: '45vh' }}>
+      <div className="flex-1 overflow-y-auto px-4 flex flex-col gap-3 pb-2">
         {chatHistory.map((msg) => (
           <div
             key={msg.id}
@@ -341,25 +357,38 @@ export const VoiceCompanionPage: React.FC = () => {
 
       {/* Bottom Controls — Text Input + Mic */}
       <div className="px-4 pb-6 pt-2 border-t border-slate-100 bg-[#F4F7FB] sticky bottom-0 flex flex-col gap-3">
-        {/* Text Input Row — shared for typing AND speech-to-text */}
+        {/* Text Input Row — mic icon inside + send button outside */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
+            {/* Mic icon inside the input on the LEFT */}
+            <button
+              onClick={toggleMic}
+              className={`absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10 ${
+                isListening
+                  ? 'bg-rose-500 text-white animate-pulse shadow-md'
+                  : 'bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-500'
+              }`}
+              aria-label="Toggle Microphone"
+              title={isListening ? 'Stop listening' : 'Tap to speak'}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+
             <input
               type="text"
               value={textInput}
               onChange={e => { setTextInput(e.target.value); setInputMode('text'); }}
               onKeyDown={e => e.key === 'Enter' && handleTextSend()}
-              placeholder={isListening ? '🎙️ Speak now — words appear here...' : 'Type or speak your question...'}
-              className={`w-full border rounded-[20px] px-4 py-3 pr-10 text-sm font-semibold text-slate-800 focus:outline-none transition-all placeholder-slate-400 ${
+              placeholder={isListening ? '🎙️ Speak now — words appear here...' : 'Type or tap 🎙️ to speak...'}
+              className={`w-full border rounded-[20px] pl-12 pr-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none transition-all placeholder-slate-400 ${
                 isListening
-                  ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-300'
+                  ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-200'
                   : 'bg-white border-slate-200 focus:ring-2 focus:ring-[#0E8765]'
               }`}
             />
-            {isListening && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-            )}
           </div>
+
+          {/* Send button */}
           <button
             onClick={handleTextSend}
             disabled={!textInput.replace(/🎙️.*$/, '').trim()}
@@ -369,37 +398,21 @@ export const VoiceCompanionPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Mic + Language Row */}
-        <div className="flex items-center justify-between">
-          {/* Language Selector */}
-          <div className="flex gap-1.5">
-            {LANGUAGES.map(lang => (
-              <button
-                key={lang.code}
-                onClick={() => setSelectedLang(lang)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
-                  selectedLang.code === lang.code
-                    ? 'bg-[#0E8765] text-white shadow-sm'
-                    : 'bg-white text-slate-600 border border-slate-200'
-                }`}
-              >
-                {lang.short}
-              </button>
-            ))}
-          </div>
-
-          {/* Mic Button */}
-          <button
-            onClick={toggleMic}
-            className={`w-16 h-16 rounded-full text-white flex items-center justify-center shadow-xl transition-all cursor-pointer active:scale-95 ${
-              isListening
-                ? 'bg-slate-700 ring-8 ring-slate-400/30 animate-pulse'
-                : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30'
-            }`}
-            aria-label="Toggle Microphone"
-          >
-            {isListening ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
-          </button>
+        {/* Language Pills Row — compact */}
+        <div className="flex gap-1.5 justify-center">
+          {LANGUAGES.map(lang => (
+            <button
+              key={lang.code}
+              onClick={() => setSelectedLang(lang)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                selectedLang.code === lang.code
+                  ? 'bg-[#0E8765] text-white shadow-sm'
+                  : 'bg-white text-slate-600 border border-slate-200'
+              }`}
+            >
+              {lang.short}
+            </button>
+          ))}
         </div>
       </div>
     </div>
