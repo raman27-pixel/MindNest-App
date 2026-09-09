@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User Profiles
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Patient Profiles
+    match /patients/{patientId} {
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        request.auth.token.role == 'CAREGIVER' ||
+        request.auth.token.role == 'PROFESSIONAL_CAREGIVER'
+      );
+      allow write: if request.auth != null && request.auth.token.role == 'CAREGIVER';
+    }
+
+    // Family Memories (Must be authorized caregiver or assigned patient)
+    match /memories/{memoryId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.role == 'CAREGIVER';
+    }
+
+    // Activity Sessions
+    match /activitySessions/{sessionId} {
+      allow read, create: if request.auth != null;
+    }
+
+    // Baselines & Change Alerts
+    match /baselines/{patientId} {
+      allow read: if request.auth != null;
+    }
+    
+    match /changeAlerts/{alertId} {
+      allow read: if request.auth != null;
+      allow update: if request.auth != null && request.auth.token.role == 'CAREGIVER';
+    }
+
+    // Audit Logs (Append only)
+    match /auditLogs/{logId} {
+      allow read: if request.auth != null && request.auth.token.role == 'ADMIN';
+      allow create: if request.auth != null;
+    }
+  }
+}

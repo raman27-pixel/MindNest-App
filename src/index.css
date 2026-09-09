@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #F4F7FB;
+  color: #1E2330;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Claymorphism Custom Component Classes */
+@layer components {
+  /* Soft Extruded Clay Surface */
+  .clay-card {
+    background: #FFFFFF;
+    border-radius: 26px;
+    box-shadow: 6px 8px 20px rgba(160, 178, 200, 0.28), -6px -8px 20px rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .clay-card-interactive {
+    @apply clay-card cursor-pointer hover:-translate-y-0.5 hover:shadow-clay-hover active:translate-y-0 active:shadow-clay-inset;
+  }
+
+  /* Extruded Clay Button */
+  .clay-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 22px;
+    padding: 0.875rem 1.75rem;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    box-shadow: 4px 6px 14px rgba(160, 175, 195, 0.3), -4px -4px 12px rgba(255, 255, 255, 0.9);
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+  }
+
+  .clay-btn-primary {
+    @apply clay-btn text-white bg-[#0E8765] hover:bg-[#0B6D52] active:shadow-clay-inset active:translate-y-0.5;
+    box-shadow: 4px 6px 16px rgba(14, 135, 101, 0.35), -4px -4px 14px rgba(255, 255, 255, 0.85);
+  }
+
+  .clay-btn-secondary {
+    @apply clay-btn text-white bg-[#1A9D7C] hover:bg-[#137E63] active:shadow-clay-inset active:translate-y-0.5;
+    box-shadow: 4px 6px 16px rgba(26, 157, 124, 0.3), -4px -4px 14px rgba(255, 255, 255, 0.85);
+  }
+
+  .clay-btn-neutral {
+    @apply clay-btn text-[#1E2330] bg-[#FFFFFF] hover:bg-[#F0F4F9] active:shadow-clay-inset active:translate-y-0.5;
+  }
+
+  .clay-btn-alert {
+    @apply clay-btn text-white bg-[#EB5757] hover:bg-[#D44444] active:shadow-clay-inset active:translate-y-0.5;
+    box-shadow: 4px 6px 16px rgba(235, 87, 87, 0.3), -4px -4px 14px rgba(255, 255, 255, 0.85);
+  }
+
+  /* Inset Soft Input Field */
+  .clay-input {
+    background: #EDF2F8;
+    border-radius: 18px;
+    box-shadow: inset 3px 3px 6px rgba(160, 175, 195, 0.25), inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(220, 228, 238, 0.8);
+    padding: 0.875rem 1.25rem;
+    color: #1E2330;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .clay-input:focus {
+    outline: none;
+    border-color: #0E8765;
+    box-shadow: inset 3px 3px 6px rgba(14, 135, 101, 0.2), inset -3px -3px 6px rgba(255, 255, 255, 0.9), 0 0 0 3px rgba(14, 135, 101, 0.15);
+  }
+
+  /* Large Touch Target Buttons for Patient UI */
+  .patient-touch-btn {
+    min-height: 64px;
+    min-width: 64px;
+    font-size: 1.35rem;
+    font-weight: 800;
+    border-radius: 24px;
+    touch-action: manipulation;
+  }
+
+  /* Clay Panel */
+  .clay-panel {
+    background: #FFFFFF;
+    border-radius: 32px;
+    box-shadow: 10px 10px 28px rgba(175, 183, 200, 0.3), -10px -10px 28px rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+  }
+
+  /* Clay Badge */
+  .clay-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    box-shadow: 2px 2px 6px rgba(160, 170, 192, 0.2), -2px -2px 6px rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* Accessibility High Contrast Mode Overrides */
+.high-contrast {
+  --font-body: 'Nunito', sans-serif;
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
+}
+
+.high-contrast .clay-card,
+.high-contrast .clay-panel {
+  background-color: #1E293B !important;
+  color: #FFFFFF !important;
+  border: 2px solid #64748B !important;
+  box-shadow: none !important;
+}
+
+.high-contrast .clay-btn-neutral {
+  background-color: #334155 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #94A3B8 !important;
+}
+
+.high-contrast .clay-input {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+  border: 2px solid #94A3B8 !important;
+  box-shadow: none !important;
+}
+
+/* Text Scaling Utilities */
+.text-scale-large {
+  font-size: 1.15rem;
+}
+
+.text-scale-xlarge {
+  font-size: 1.3rem;
+}
+
+/* Custom Scrollbar for Caregiver Views */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F0F3FA;
+}
+::-webkit-scrollbar-thumb {
+  background: #C5CBD8;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A0AAB8;
+}
