@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Volume2, Mic, MicOff, StopCircle, Sparkles, Send } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, StopCircle, Sparkles, Send, Keyboard } from 'lucide-react';
 import { sanitizeTextForSpeech } from '../../services/speechSanitizer';
 import { GeminiClient } from '../../services/geminiClient';
 import { db } from '../../services/db';
@@ -22,19 +22,23 @@ const LANGUAGES = [
 
 const GREETING = 'Namaste Rita ji! Main aapki saheli hoon. Aap mujhse apne ghar, bachpan ya parivaar ke baare mein kuch bhi keh sakti hain.';
 
+// Delay in ms before auto-sending after mic stops
+const AUTO_SEND_DELAY = 1500;
+
 export const VoiceCompanionPage: React.FC = () => {
   const navigate = useNavigate();
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [transcript, setTranscript] = useState('');
   const [textInput, setTextInput] = useState('');
   const [selectedLang, setSelectedLang] = useState(LANGUAGES[0]);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
   const recognitionRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const greetedRef = useRef(false);
   const msgIdRef = useRef(0);
+  const autoSendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getTime = () => new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
@@ -109,26 +113,60 @@ export const VoiceCompanionPage: React.FC = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
+      recognition.continuous = true;      // keep listening continuously
+      recognition.interimResults = true;  // show words live as you speak
       recognition.lang = selectedLang.code;
 
       recognition.onresult = (event: any) => {
-        const text = event.results[event.resultIndex][0].transcript;
-        setTranscript(text);
+        // Build full interim + final transcript
+        let interim = '';
+        let final = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        // Put spoken words directly into the text input box
+        setTextInput(prev => {
+          const base = prev.replace(/\s*🎙️.*$/, '').trim(); // remove old interim marker
+          if (final) return (base + ' ' + final).trim();
+          if (interim) return (base + (base ? ' ' : '') + '🎙️' + interim).trim();
+          return prev;
+        });
+
+        // Reset auto-send timer on every new result
+        if (autoSendTimerRef.current) clearTimeout(autoSendTimerRef.current);
+        if (final) {
+          autoSendTimerRef.current = setTimeout(() => {
+            // clean up mic marker then auto-send
+            setTextInput(prev => {
+              const clean = prev.replace(/\s*🎙️.*$/, '').trim();
+              if (clean) {
+                // trigger send after state settles
+                setTimeout(() => {
+                  setTextInput(t => {
+                    const toSend = t.replace(/\s*🎙️.*$/, '').trim();
+                    if (toSend) generateReply(toSend);
+                    return '';
+                  });
+                }, 50);
+              }
+              return clean;
+            });
+          }, AUTO_SEND_DELAY);
+        }
       };
 
-      recognition.onerror = () => setIsListening(false);
+      recognition.onerror = (e: any) => {
+        if (e.error !== 'aborted') setIsListening(false);
+      };
 
       recognition.onend = () => {
         setIsListening(false);
-        setTranscript(prev => {
-          if (prev.trim()) {
-            generateReply(prev);
-            return '';
-          }
-          return prev;
-        });
+        // Clean up mic marker in input
+        setTextInput(prev => prev.replace(/\s*🎙️.*$/, '').trim());
       };
 
       recognitionRef.current = recognition;
@@ -137,6 +175,7 @@ export const VoiceCompanionPage: React.FC = () => {
     return () => {
       recognitionRef.current?.stop();
       window.speechSynthesis?.cancel();
+      if (autoSendTimerRef.current) clearTimeout(autoSendTimerRef.current);
     };
   }, [selectedLang.code]);
 
@@ -146,13 +185,16 @@ export const VoiceCompanionPage: React.FC = () => {
 
   const toggleMic = () => {
     if (isListening) {
+      if (autoSendTimerRef.current) clearTimeout(autoSendTimerRef.current);
       recognitionRef.current?.stop();
       setIsListening(false);
+      // Clean up mic marker
+      setTextInput(prev => prev.replace(/\s*🎙️.*$/, '').trim());
     } else {
-      setTranscript('');
       try {
         recognitionRef.current?.start();
         setIsListening(true);
+        setInputMode('voice');
       } catch {
         // mic unavailable
       }
@@ -198,7 +240,7 @@ export const VoiceCompanionPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Companion Avatar - compact */}
+      {/* Compact avatar */}
       <div className="flex flex-col items-center gap-2 pt-4 pb-2 px-4">
         <div className="relative flex items-center justify-center">
           {/* Sound waves left */}
@@ -289,28 +331,38 @@ export const VoiceCompanionPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Transcript preview if listening */}
-      {transcript && (
-        <div className="mx-4 mb-2 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-2 text-sm font-bold text-emerald-800 animate-fade-in">
-          🎙️ "{transcript}"
+      {/* Mic listening hint */}
+      {isListening && (
+        <div className="mx-4 mb-2 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-2 text-sm font-bold text-rose-700 animate-pulse flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+          Listening... speak now. Words appear in the box below.
         </div>
       )}
 
       {/* Bottom Controls — Text Input + Mic */}
       <div className="px-4 pb-6 pt-2 border-t border-slate-100 bg-[#F4F7FB] sticky bottom-0 flex flex-col gap-3">
-        {/* Text Input Row */}
+        {/* Text Input Row — shared for typing AND speech-to-text */}
         <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={textInput}
-            onChange={e => setTextInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleTextSend()}
-            placeholder="Type your question here..."
-            className="flex-1 bg-white border border-slate-200 rounded-[20px] px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0E8765] placeholder-slate-400"
-          />
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={textInput}
+              onChange={e => { setTextInput(e.target.value); setInputMode('text'); }}
+              onKeyDown={e => e.key === 'Enter' && handleTextSend()}
+              placeholder={isListening ? '🎙️ Speak now — words appear here...' : 'Type or speak your question...'}
+              className={`w-full border rounded-[20px] px-4 py-3 pr-10 text-sm font-semibold text-slate-800 focus:outline-none transition-all placeholder-slate-400 ${
+                isListening
+                  ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-300'
+                  : 'bg-white border-slate-200 focus:ring-2 focus:ring-[#0E8765]'
+              }`}
+            />
+            {isListening && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+            )}
+          </div>
           <button
             onClick={handleTextSend}
-            disabled={!textInput.trim()}
+            disabled={!textInput.replace(/🎙️.*$/, '').trim()}
             className="w-11 h-11 rounded-full bg-[#0E8765] text-white flex items-center justify-center shadow-lg disabled:opacity-40 transition-all active:scale-95"
           >
             <Send className="w-4 h-4" />
