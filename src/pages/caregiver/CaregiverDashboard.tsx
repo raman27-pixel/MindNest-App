@@ -14,7 +14,8 @@ import {
   Star,
   ChevronRight,
   RefreshCw,
-  Plus
+  Plus,
+  Activity
 } from 'lucide-react';
 import { db } from '../../services/db';
 import { CaregiverBottomNav } from '../../components/common/CaregiverBottomNav';
@@ -26,12 +27,14 @@ export const CaregiverDashboard: React.FC = () => {
   const [patient, setPatient] = useState<PatientProfile>(db.getPatientProfile());
   const [alerts, setAlerts] = useState<MeaningfulChangeAlert[]>(db.getChangeAlerts());
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(db.getFamilyMembers());
+  const [activityCounts, setActivityCounts] = useState(db.getTodayActivityCounts());
 
   useEffect(() => {
     return db.subscribe(() => {
       setPatient(db.getPatientProfile());
       setAlerts(db.getChangeAlerts());
       setFamilyMembers(db.getFamilyMembers());
+      setActivityCounts(db.getTodayActivityCounts());
     });
   }, []);
 
@@ -54,7 +57,7 @@ export const CaregiverDashboard: React.FC = () => {
               Caregiver Dashboard
             </h1>
             <span className="text-xs font-bold text-slate-400">
-              Last updated: Today, 10:42 AM
+              Last updated: Today, {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
         </div>
@@ -109,24 +112,30 @@ export const CaregiverDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Today's Engagement Section matching Screen 10 */}
+      {/* Today's Engagement Section — Live Activity Counts */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-base sm:text-lg font-black text-slate-800 font-heading">
+          <h2 className="text-base sm:text-lg font-black text-slate-800 font-heading flex items-center gap-2">
             Today's Engagement
+            {Object.values(activityCounts).some(v => v > 0) && (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            )}
           </h2>
           <span className="text-xs font-bold text-[#0E8765]">
-            Asha Devi • 4 Activities Logged
+            Asha Devi • {Object.values(activityCounts).reduce((a, b) => a + b, 0)} Activities Logged
           </span>
         </div>
 
-        {/* 2x2 Grid of Engagement Cards */}
+        {/* 2x2 Grid of Engagement Cards — Live Counts */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {/* Memory Activities */}
           <div className="bg-white rounded-[24px] p-4 shadow-clay-card border border-white flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-xs font-bold text-slate-400">Memory Activities</span>
-              <span className="text-2xl sm:text-3xl font-black text-slate-800 font-heading mt-0.5">3</span>
+              <span className="text-2xl sm:text-3xl font-black text-slate-800 font-heading mt-0.5">{activityCounts.memoryActivities}</span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <Gamepad2 className="w-6 h-6" />
@@ -137,7 +146,7 @@ export const CaregiverDashboard: React.FC = () => {
           <div className="bg-white rounded-[24px] p-4 shadow-clay-card border border-white flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-xs font-bold text-slate-400">Music</span>
-              <span className="text-2xl sm:text-3xl font-black text-slate-800 font-heading mt-0.5">1</span>
+              <span className="text-2xl sm:text-3xl font-black text-slate-800 font-heading mt-0.5">{activityCounts.music}</span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
               <Music className="w-6 h-6" />
@@ -148,7 +157,7 @@ export const CaregiverDashboard: React.FC = () => {
           <div className="bg-white rounded-[24px] p-4 shadow-clay-card border border-white flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-xs font-bold text-slate-400">Conversation</span>
-              <span className="text-2xl sm:text-3xl font-black text-slate-800 font-heading mt-0.5">2</span>
+              <span className="text-2xl sm:text-3xl font-black text-slate-800 font-heading mt-0.5">{activityCounts.conversation}</span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <MessageSquare className="w-6 h-6" />
@@ -159,7 +168,7 @@ export const CaregiverDashboard: React.FC = () => {
           <div className="bg-white rounded-[24px] p-4 shadow-clay-card border border-white flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-xs font-bold text-slate-400">Family Photos</span>
-              <span className="text-2xl sm:text-3xl font-black text-slate-800 font-heading mt-0.5">4</span>
+              <span className="text-2xl sm:text-3xl font-black text-slate-800 font-heading mt-0.5">{activityCounts.familyPhotos}</span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <ImageIcon className="w-6 h-6" />

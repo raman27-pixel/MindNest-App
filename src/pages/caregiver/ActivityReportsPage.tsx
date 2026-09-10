@@ -132,38 +132,6 @@ export const ActivityReportsPage: React.FC = () => {
     doc.save(`MindNest_Activity_Report_${patient.name.replace(/\s+/g, '_')}.pdf`);
   };
 
-  // Export CSV
-  const handleDownloadCSV = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + 
-      "Metric,Value\n" +
-      `Patient Name,${activeReport.patientName}\n` +
-      `Report Range,${activeReport.reportDateRange}\n` +
-      `Activities Completed,${activeReport.totalActivitiesCompleted}\n` +
-      `Completion Rate,${Math.round(activeReport.completionRate * 100)}%\n` +
-      `Average Duration (Mins),${activeReport.averageDurationMinutes}\n` +
-      `Assistance Level,${activeReport.assistanceLevel}\n` +
-      `Duration Delta vs Baseline,${activeReport.baselineComparison.durationDelta}\n` +
-      `Disclaimer,"Supportive companion report — not a medical diagnosis."\n`;
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `MindNest_Report_${patient.name}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Export JSON
-  const handleDownloadJSON = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(activeReport, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `MindNest_Report_${patient.name}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-  };
 
   // Generate Secure Expiring Share Link
   const handleCreateShareLink = () => {
@@ -196,20 +164,6 @@ export const ActivityReportsPage: React.FC = () => {
           >
             <Download className="w-4 h-4" />
             <span>Download PDF</span>
-          </button>
-
-          <button
-            onClick={handleDownloadCSV}
-            className="px-3.5 py-2.5 rounded-2xl text-xs font-extrabold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm"
-          >
-            CSV
-          </button>
-
-          <button
-            onClick={handleDownloadJSON}
-            className="px-3.5 py-2.5 rounded-2xl text-xs font-extrabold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm"
-          >
-            JSON
           </button>
         </div>
       </div>

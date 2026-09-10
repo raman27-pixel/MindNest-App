@@ -622,6 +622,46 @@ class DatabaseService {
     this.notify();
   }
 
+  // Today's Activity Counts — live scoring that starts at 0
+  private todayActivityCounts: Record<string, number> = {
+    memoryActivities: 0,
+    music: 0,
+    conversation: 0,
+    familyPhotos: 0
+  };
+  private todayDate: string = new Date().toDateString();
+
+  public getTodayActivityCounts(): Record<string, number> {
+    // Auto-reset if the day changed
+    const today = new Date().toDateString();
+    if (today !== this.todayDate) {
+      this.resetTodayActivityCounts();
+      this.todayDate = today;
+    }
+    return { ...this.todayActivityCounts };
+  }
+
+  public incrementActivityCount(type: 'memoryActivities' | 'music' | 'conversation' | 'familyPhotos'): void {
+    const today = new Date().toDateString();
+    if (today !== this.todayDate) {
+      this.resetTodayActivityCounts();
+      this.todayDate = today;
+    }
+    this.todayActivityCounts[type] = (this.todayActivityCounts[type] || 0) + 1;
+    this.notify();
+  }
+
+  public resetTodayActivityCounts(): void {
+    this.todayActivityCounts = {
+      memoryActivities: 0,
+      music: 0,
+      conversation: 0,
+      familyPhotos: 0
+    };
+    this.todayDate = new Date().toDateString();
+    this.notify();
+  }
+
   // Offline Sync Management
   public getOfflineStatus(): OfflineSyncStatus {
     return { ...this.offlineStatus };

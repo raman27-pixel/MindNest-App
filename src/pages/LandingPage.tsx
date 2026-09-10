@@ -9,8 +9,7 @@ export const LandingPage: React.FC = () => {
   const { loginAsDemo } = useAuth();
 
   const handleGetStarted = () => {
-    loginAsDemo('PATIENT');
-    navigate('/patient/home');
+    navigate('/login');
   };
 
   return (
@@ -95,10 +94,7 @@ export const LandingPage: React.FC = () => {
         </button>
 
         <button
-          onClick={() => {
-            loginAsDemo('CAREGIVER');
-            navigate('/caregiver/dashboard');
-          }}
+          onClick={() => navigate('/login')}
           className="flex-1 min-w-[140px] px-4 py-3 rounded-2xl bg-white shadow-clay-sm border border-slate-200 text-center text-xs font-extrabold text-slate-700 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
         >
           <span>Caregiver Portal 👨‍👩‍👧</span>

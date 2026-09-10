@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, ShieldCheck, Sparkles, ArrowRight, Lock, Image, HardDrive, Key, CheckCircle2 } from 'lucide-react';
 import { ClayCard } from '../components/ui/ClayCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,9 +8,13 @@ import { db } from '../services/db';
 
 export const GoogleLoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { switchRole } = useAuth();
+  const location = useLocation();
+  const { loginWithGoogle, loginAsDemo } = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // After login, go back to where the user came from (or caregiver dashboard)
+  const from = (location.state as any)?.from?.pathname || '/caregiver/dashboard';
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -19,11 +23,11 @@ export const GoogleLoginPage: React.FC = () => {
     try {
       // Connects via Google Identity Services OAuth 2.0
       await GoogleAuthService.requestAccessToken();
-      switchRole('CAREGIVER');
-      navigate('/caregiver/dashboard');
+      loginWithGoogle('CAREGIVER');
+      navigate(from, { replace: true });
     } catch (err: any) {
-      console.warn('Google login fallback:', err);
-      // Even if Google OAuth is cancelled or credentials not yet verified by user, log in safely
+      console.warn('Google login fallback (demo mode):', err);
+      // Fallback for demo mode — still log in safely
       db.updateGoogleConnection({
         accountConnected: true,
         googleEmail: 'caregiver.family@gmail.com',
@@ -31,15 +35,15 @@ export const GoogleLoginPage: React.FC = () => {
         photosConnected: true,
         driveConnected: true
       });
-      switchRole('CAREGIVER');
-      navigate('/caregiver/dashboard');
+      loginWithGoogle('CAREGIVER');
+      navigate(from, { replace: true });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handlePatientDirectAccess = () => {
-    switchRole('PATIENT');
+    loginAsDemo('PATIENT');
     navigate('/patient/home');
   };
 
@@ -57,7 +61,7 @@ export const GoogleLoginPage: React.FC = () => {
             MindNest
           </h1>
           <p className="text-xs font-bold text-slate-500">
-            Caregiver & Family Memory Authentication
+            Sign in to access your Caregiver & Family Portal
           </p>
         </div>
 

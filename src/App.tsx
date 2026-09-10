@@ -6,6 +6,8 @@ import { VoiceProvider } from './contexts/VoiceContext';
 import { Header } from './components/common/Header';
 import { PatientNavigation } from './components/common/PatientNavigation';
 import { CaregiverSidebar } from './components/common/CaregiverSidebar';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { OfflineBanner } from './components/common/OfflineBanner';
 
 import { LandingPage } from './pages/LandingPage';
 import { GoogleLoginPage } from './pages/GoogleLoginPage';
@@ -53,67 +55,73 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 
 const PatientLayout: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F7FB]">
-      <Header />
-      <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<Navigate to="/patient/home" replace />} />
-          <Route path="/home" element={<PatientHome />} />
-          <Route path="/regional-context" element={<RegionalContextPage />} />
-          <Route path="/profile" element={<RegionalContextPage />} />
-          <Route path="/memories" element={<PatientMemoryLibraryPage />} />
-          <Route path="/memory-lane" element={<MemoryLanePage />} />
-          <Route path="/activities" element={<ActivitySelectionPage />} />
-          <Route path="/play" element={<ActivityPlayPage />} />
-          <Route path="/memory-box" element={<MemoryBoxGamePage />} />
-          <Route path="/match-people" element={<MatchPeopleGamePage />} />
-          <Route path="/activity-result" element={<ActivityResultPage />} />
-          <Route path="/voice" element={<VoiceCompanionPage />} />
-          <Route path="/companion" element={<MemoryCompanionPage />} />
-          <Route path="/routine" element={<RoutinePage />} />
-          <Route path="/tasks" element={<DailyTasksPage />} />
-          <Route path="/festivals" element={<FestivalsCulturePage />} />
-          <Route path="/places" element={<PlacesRememberPage />} />
-          <Route path="/music" element={<CulturalMusicPage />} />
-          <Route path="/journey" element={<JourneyActivityPage />} />
-          <Route path="/offline" element={<OfflineModePage />} />
-          <Route path="/settings" element={<PatientSettingsPage />} />
-        </Routes>
-      </main>
-      <PatientNavigation />
-    </div>
+    <ProtectedRoute>
+      <div className="min-h-screen flex flex-col bg-[#F4F7FB]">
+        <OfflineBanner />
+        <Header />
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Navigate to="/patient/home" replace />} />
+            <Route path="/home" element={<PatientHome />} />
+            <Route path="/regional-context" element={<RegionalContextPage />} />
+            <Route path="/profile" element={<RegionalContextPage />} />
+            <Route path="/memories" element={<PatientMemoryLibraryPage />} />
+            <Route path="/memory-lane" element={<MemoryLanePage />} />
+            <Route path="/activities" element={<ActivitySelectionPage />} />
+            <Route path="/play" element={<ActivityPlayPage />} />
+            <Route path="/memory-box" element={<MemoryBoxGamePage />} />
+            <Route path="/match-people" element={<MatchPeopleGamePage />} />
+            <Route path="/activity-result" element={<ActivityResultPage />} />
+            <Route path="/voice" element={<VoiceCompanionPage />} />
+            <Route path="/companion" element={<MemoryCompanionPage />} />
+            <Route path="/routine" element={<RoutinePage />} />
+            <Route path="/tasks" element={<DailyTasksPage />} />
+            <Route path="/festivals" element={<FestivalsCulturePage />} />
+            <Route path="/places" element={<PlacesRememberPage />} />
+            <Route path="/music" element={<CulturalMusicPage />} />
+            <Route path="/journey" element={<JourneyActivityPage />} />
+            <Route path="/offline" element={<OfflineModePage />} />
+            <Route path="/settings" element={<PatientSettingsPage />} />
+          </Routes>
+        </main>
+        <PatientNavigation />
+      </div>
+    </ProtectedRoute>
   );
 };
 
 const CaregiverLayout: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F7FB]">
-      <Header />
-      <div className="flex flex-1 max-w-7xl w-full mx-auto">
-        <CaregiverSidebar />
-        <main className="flex-1 p-4 md:p-8 min-h-[calc(100vh-65px)]">
-          <Routes>
-            <Route path="/" element={<Navigate to="/caregiver/dashboard" replace />} />
-            <Route path="/dashboard" element={<CaregiverDashboard />} />
-            <Route path="/profile" element={<PatientProfilePage />} />
-            <Route path="/regional-context" element={<RegionalContextPage />} />
-            <Route path="/memories" element={<MemoryLibraryPage />} />
-            <Route path="/memories/new" element={<MemoryFormPage />} />
-            <Route path="/family-story" element={<FamilyStoryCapturePage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/reports" element={<ActivityReportsPage />} />
-            <Route path="/family" element={<FamilyCareTeamPage />} />
-            <Route path="/connected-accounts" element={<ConnectedAccountsPage />} />
-            <Route path="/voice-settings" element={<VoiceSettingsPage />} />
-            <Route path="/alerts" element={<ChangeAlertsPage />} />
-            <Route path="/reminders" element={<RemindersPage />} />
-            <Route path="/ai-recommendations" element={<AIRecommendationsPage />} />
-            <Route path="/consent" element={<ConsentPrivacyPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
-        </main>
+    <ProtectedRoute>
+      <div className="min-h-screen flex flex-col bg-[#F4F7FB]">
+        <OfflineBanner />
+        <Header />
+        <div className="flex flex-1 max-w-7xl w-full mx-auto">
+          <CaregiverSidebar />
+          <main className="flex-1 p-4 md:p-8 min-h-[calc(100vh-65px)]">
+            <Routes>
+              <Route path="/" element={<Navigate to="/caregiver/dashboard" replace />} />
+              <Route path="/dashboard" element={<CaregiverDashboard />} />
+              <Route path="/profile" element={<PatientProfilePage />} />
+              <Route path="/regional-context" element={<RegionalContextPage />} />
+              <Route path="/memories" element={<MemoryLibraryPage />} />
+              <Route path="/memories/new" element={<MemoryFormPage />} />
+              <Route path="/family-story" element={<FamilyStoryCapturePage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/reports" element={<ActivityReportsPage />} />
+              <Route path="/family" element={<FamilyCareTeamPage />} />
+              <Route path="/connected-accounts" element={<ConnectedAccountsPage />} />
+              <Route path="/voice-settings" element={<VoiceSettingsPage />} />
+              <Route path="/alerts" element={<ChangeAlertsPage />} />
+              <Route path="/reminders" element={<RemindersPage />} />
+              <Route path="/ai-recommendations" element={<AIRecommendationsPage />} />
+              <Route path="/consent" element={<ConsentPrivacyPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 
@@ -132,12 +140,14 @@ export const App: React.FC = () => {
               <Route 
                 path="/admin" 
                 element={
-                  <div className="min-h-screen flex flex-col bg-[#F5F6FA]">
-                    <Header />
-                    <main className="p-8 max-w-5xl mx-auto flex-1 w-full">
-                      <AdminDashboard />
-                    </main>
-                  </div>
+                  <ProtectedRoute>
+                    <div className="min-h-screen flex flex-col bg-[#F5F6FA]">
+                      <Header />
+                      <main className="p-8 max-w-5xl mx-auto flex-1 w-full">
+                        <AdminDashboard />
+                      </main>
+                    </div>
+                  </ProtectedRoute>
                 } 
               />
               <Route path="*" element={<Navigate to="/" replace />} />
